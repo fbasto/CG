@@ -1,6 +1,6 @@
 ﻿#include <stdlib.h>
 #include <stdio.h>
-#include <glut.h>
+//#include <glut.h>
 #include <math.h>
 #include <string.h>
 #include <map>
@@ -13,7 +13,7 @@
 #include <list>
 #include "RgbImage.h"
 
-//#include <GL/glut.h>*/
+#include <GL/glut.h>
 
 //--------------------------------- Definir cores
 #define AZUL     0.0, 0.0, 1.0, 1.0
@@ -130,7 +130,7 @@ GLfloat focoCorDif[4] = { 0.85, 0.85,0.85, 1.0 };
 
 
 //Nevoeiro
-GLint linear = 1;
+GLint linear = 0;
 
 
 GLfloat x = 0;
@@ -149,35 +149,36 @@ void iluminacao();
 void initNevoeiro(void);
 void initLights(void);
 void criarsky();
-//void sideTextures(char path[50], int i);
+void sideTextures(char path[50], int i);
+void criarTexturas();
 
 void criarsky() {
 	int i;
 	//char sides[6][20]= {"craterlake_ft.bmp","craterlake_rt.bmp","craterlake_bk.bmp","craterlake_lf.bmp","craterlake_up.bmp","craterlake_dn.bmp"};
-	char sides[6][20] = { "left.bmp","back.bmp","top.bmp","right.bmp","front.bmp","bot.bmp" }
+	char sides[6][20] = { "left.bmp","back.bmp","top.bmp","right.bmp","front.bmp","bot.bmp" };
 	char tpath[50];
 
 	for (i = 0; i<6; i++) {
-		//sprintf(tpath, "skybox/%s", sides[i]); usa-se o sprint_s pq esta funçao está deprecated
-		sprintf_s(tpath, "skybox/%s", sides[i]);
-		//sideTextures(tpath, i);
+		sprintf(tpath, "skybox/%s", sides[i]); //usa-se o sprint_s pq esta funçao está deprecated
+		//sprintf_s(tpath, "skybox/%s", sides[i]);
+		sideTextures(tpath, i);
 	}
 }
-/*
+
 void sideTextures(char path[50], int i) {
-glGenTextures(1, &textures[i]);
-glBindTexture(GL_TEXTURE_2D, textures[i]);
-glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-imag.LoadBmpFile(path);
-glTexImage2D(GL_TEXTURE_2D, 0, 3,
-imag.GetNumCols(),
-imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-imag.ImageData());
-}*/
+	glGenTextures(1, &textures[i]);
+	glBindTexture(GL_TEXTURE_2D, textures[i]);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	imag.LoadBmpFile(path);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+	imag.GetNumCols(),
+	imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+	imag.ImageData());
+}
 
 //--------------------- NOVO - Definicoes do nevoeiro
 void initNevoeiro(void) {
@@ -374,7 +375,7 @@ void init(void)
 	initLights();
 	initNevoeiro();
 	criarsky();
-	criartexturas();
+	criarTexturas();
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -620,7 +621,7 @@ void spawnCube(int cubeNumber, int posX, int posY, int posZ, int face1, char* cl
 	glPopMatrix();
 }
 
-void criartexturas() {
+void criarTexturas() {
 	glGenTextures(1, &textures[6]);
 	glBindTexture(GL_TEXTURE_2D, textures[6]);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -702,10 +703,10 @@ void drawSkybox(int d) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBegin(GL_QUADS);
 
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-d, d, d);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(d, d, d);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(d, d, -d);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-d, d, -d);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(d, d, d);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(d, d, -d);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-d, d, -d);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-d, d, d);
 	glEnd();
 
 	//Down
@@ -783,16 +784,17 @@ void drawScene(GLenum order) {
 			glBindTexture(GL_TEXTURE_2D, textures[7]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0);
+			glTexCoord2f(1.0, 0.0); glVertex3f(0, 0, surfaceSize);
+			glTexCoord2f(1.0, 1.0); glVertex3f(0, surfaceHeight, surfaceSize);
+			glTexCoord2f(0.0, 1.0); glVertex3f(0, surfaceHeight, 0);
+			glEnd();
+			glDisable(GL_TEXTURE_2D);
+			glPopMatrix();
 
 		}
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0);
-		glTexCoord2f(1.0, 0.0); glVertex3f(0, 0, surfaceSize);
-		glTexCoord2f(1.0, 1.0); glVertex3f(0, surfaceHeight, surfaceSize);
-		glTexCoord2f(0.0, 1.0); glVertex3f(0, surfaceHeight, 0);
-		glEnd();
-		glDisable(GL_TEXTURE_2D);
-		glPopMatrix();
+
 		glDisable(GL_BLEND);
 
 		//~~~~~~~~~~~~~~Plano Z = 0
@@ -898,7 +900,7 @@ void display(void) {
 	glLoadIdentity();
 	gluLookAt(obsPini[0], obsPini[1], obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2], 0, 1, 0);
 	//printf("%lf %lf %lf %lf %lf %lf\n", obsPini[0], obsPini[1], obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2]);
-
+	iluminacao();
 	drawSkybox(100);
 	iluminacao();
 
@@ -912,6 +914,7 @@ void display(void) {
 
 	/* Mirror */
 		glClear(GL_DEPTH_BUFFER_BIT);
+		drawSkybox(100);
 		glPushAttrib(0xffffffff);
 		glDisable(GL_LIGHTING);
 		glEnable(GL_BLEND);
