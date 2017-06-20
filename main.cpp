@@ -1,14 +1,19 @@
 ﻿#include <stdlib.h>
 #include <stdio.h>
+#include <glut.h>
+#include <math.h>
+#include <string.h>
+#include <map>
+#include <list>
+#include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <map>
 #include <list>
 #include "RgbImage.h"
-#include <GL/glut.h>
 
 //#include <GL/glut.h>*/
-
 
 //--------------------------------- Definir cores
 #define AZUL     0.0, 0.0, 1.0, 1.0
@@ -65,33 +70,35 @@ GLint     wScreen = 700, hScreen = 600;
 GLfloat   bule = 0.5;				// dimensao da chaleira
 GLfloat   mesaP[] = { 3, 0, 3 };	// posicao da mesa
 GLfloat   buleP[] = { 1, bule, 1 };		//posicao do bule
-GLfloat  rVisao = 3.0, aVisao = 0.5*PI, incVisao = 0.1;
-GLfloat  obsPini[] = { 0, 0, 0.5*xC };
-GLfloat  obsPfin[] = { obsPini[0] - rVisao*cos(aVisao), obsPini[1], obsPini[2] - rVisao*sin(aVisao) };
-
 GLfloat   rcube_size = 0.5;				// dimensao da rcube_size
-static GLfloat   rcubeP[] = { 2, rcube_size/2, 2 };	// posicao do rcube
+static int rcube_scale = 1;
+static GLfloat   rcubeP[] = { 2, rcube_size / 2, 2 };	// posicao do rcube
+GLfloat  rVisao = 3.0, aVisao = 0.5*PI, incVisao = 0.1;
+GLfloat  obsPini[] = { rcubeP[0] + rcube_size, rcubeP[1], 0.5*xC };
+GLfloat  obsPfin[] = { obsPini[0] - rVisao*cos(aVisao), obsPini[1], obsPini[2] - rVisao*sin(aVisao) };
+static int surfaceSize = 10;
+static int surfaceHeight = 2;
+static float movementVariable = 0.1;
 double rotate_y = 0;
 double rotate_x = 0;
 static int rotation_value;
 static bool randomSolved = true; // Random = true || Solved = falsed
+static bool transparentX = false; // Transparente se for true
 static bool transparentZ = false; // Transparente se for true
+static bool movableCube = true;
 
-//------------------------------------------------------------ Texturas e Rotacao
+								  //------------------------------------------------------------ Texturas e Rotacao
 GLfloat   quadS = 4.0;
 GLfloat   quadP[] = { -2, 0, -8 };
-
 
 //------------------------------------------------------------ Nevoeiro
 GLfloat nevoeiroCor[] = { 0.75, 0.75, 0.75, 1.0 };
 
 
-
 /*skybox texturas*/
-GLuint textures[7];
+GLuint textures[8];
 float brightness = 0.8f;
 RgbImage imag;
-
 
 //------------------------------------------------------------ Iluminacao
 //------------------------------------------------------------ Global (ambiente)
@@ -136,48 +143,44 @@ GLint dim = 64;
 
 void updateVisao();
 void init(void);
-void drawScene();
+void drawScene(GLenum order);
 void display(void);
 void iluminacao();
 void initNevoeiro(void);
 void initLights(void);
 void criarsky();
-void sideTextures(char path[50], int i);
+//void sideTextures(char path[50], int i);
 
-
-void criarsky(){
+void criarsky() {
 	int i;
 	//char sides[6][20]= {"craterlake_ft.bmp","craterlake_rt.bmp","craterlake_bk.bmp","craterlake_lf.bmp","craterlake_up.bmp","craterlake_dn.bmp"};
-	char sides[6][20]= {"left.bmp","back.bmp","top.bmp","right.bmp","front.bmp","bot.bmp"};
+	char sides[6][20] = { "left.bmp","back.bmp","top.bmp","right.bmp","front.bmp","bot.bmp" }
 	char tpath[50];
+
 	for (i = 0; i<6; i++) {
-		sprintf(tpath, "skybox/%s", sides[i]); //usa-se o sprint_s pq esta funçao está deprecated
-		//sprintf_s(tpath, "skybox/%s", sides[i]);
-		sideTextures(tpath, i);
+		//sprintf(tpath, "skybox/%s", sides[i]); usa-se o sprint_s pq esta funçao está deprecated
+		sprintf_s(tpath, "skybox/%s", sides[i]);
+		//sideTextures(tpath, i);
 	}
 }
-
-
+/*
 void sideTextures(char path[50], int i) {
-	glGenTextures(1, &textures[i]);
-	glBindTexture(GL_TEXTURE_2D, textures[i]);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	imag.LoadBmpFile(path);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-		imag.GetNumCols(),
-		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-		imag.ImageData());
-}
-
-
+glGenTextures(1, &textures[i]);
+glBindTexture(GL_TEXTURE_2D, textures[i]);
+glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+imag.LoadBmpFile(path);
+glTexImage2D(GL_TEXTURE_2D, 0, 3,
+imag.GetNumCols(),
+imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+imag.ImageData());
+}*/
 
 //--------------------- NOVO - Definicoes do nevoeiro
 void initNevoeiro(void) {
-
 	glFogfv(GL_FOG_COLOR, nevoeiroCor); //Cor do nevoeiro
 	glFogi(GL_FOG_MODE, GL_LINEAR); //Equa�cao do nevoeiro - linear
 	glFogf(GL_FOG_START, 1.0); // Distancia a que tera' inicio o nevoeiro
@@ -227,7 +230,7 @@ static void timerFly(int value) {
 		value++;
 		glutTimerFunc(TIMER / 7, timerFly, value);
 	}
-	if (value >= 10 && value < 20) {
+	else if (value >= 10 && value < 20) {
 		rcubeP[1] -= 0.2;
 		glutPostRedisplay();
 		value++;
@@ -237,6 +240,46 @@ static void timerFly(int value) {
 
 static void cbMainMenu(int value)
 {
+	if (value == 81) {
+		if (movableCube == false) {
+			movableCube = true;
+		}
+		else {
+			movableCube = false;
+		}
+		drawScene(GL_CCW);
+		glutPostRedisplay();
+	}
+	if (value == 82) {
+		if (transparentX == false) {
+			transparentX = true;
+		}
+		else {
+			transparentX = false;
+		}
+		drawScene(GL_CCW);
+		glutPostRedisplay();
+	}
+	if (value == 84) {
+		rcube_scale = rcube_scale * 2;
+		glutPostRedisplay();
+	}
+	if (value == 83) {
+		if (rcube_scale > 1) {
+			rcube_scale = rcube_scale / 2;
+		}
+		glutPostRedisplay();
+	}
+	if (value == 86) {
+		surfaceSize = surfaceSize * 2;
+		glutPostRedisplay();
+	}
+	if (value == 85) {
+		if (surfaceSize > 5) {
+			surfaceSize = surfaceSize / 2;
+			glutPostRedisplay();
+		}
+	}
 	if (value == 87) {
 		if (transparentZ == false) {
 			transparentZ = true;
@@ -244,7 +287,7 @@ static void cbMainMenu(int value)
 		else {
 			transparentZ = false;
 		}
-		drawScene();
+		drawScene(GL_CCW);
 		glutPostRedisplay();
 	}
 	if (value == 88) {
@@ -328,9 +371,10 @@ void init(void)
 	glEnable(GL_COLOR_MATERIAL);
 	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-	//initLights();
+	initLights();
 	initNevoeiro();
 	criarsky();
+	criartexturas();
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -338,8 +382,6 @@ void init(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND); //Enable blending.
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
-
-
 
 
 
@@ -355,9 +397,15 @@ void init(void)
 	glutAddMenuEntry("Standing", 98);
 	mainMenu = glutCreateMenu(cbMainMenu);
 	glutAddSubMenu("Rotate Cube", rotationsMenu);
-	glutAddMenuEntry("Fly Cube", 88);
+	glutAddMenuEntry("Jump Cube", 88);
 	glutAddMenuEntry("Solve Cube", 89);
-	glutAddMenuEntry("Change wall transparency", 87);
+	glutAddMenuEntry("Change cube mobility (Stuck/Movable)", 81);
+	glutAddMenuEntry("Change X-Wall transparency", 82);
+	glutAddMenuEntry("Change Z-Wall transparency", 87);
+	glutAddMenuEntry("Duplicate cube size (by 2)", 84);
+	glutAddMenuEntry("Divide cube size (by 2)", 83);
+	glutAddMenuEntry("Duplicate surface size (by 2)", 86);
+	glutAddMenuEntry("Divide surface size (by 2)", 85);
 	glutAddMenuEntry("Quit", 99);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 	attributeCubeColors();
@@ -367,7 +415,8 @@ void init(void)
 void glColor4fCustom(int transparency, double clr[]) {
 	if (clr == blank) {
 		glColor4f(0, 0, 0, 0);
-	}else{
+	}
+	else {
 		glColor4f(clr[0], clr[1], clr[2], transparency);
 	}
 }
@@ -408,16 +457,18 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	double pY = posY * rcube_size;
 	double pZ = posZ * rcube_size;
 
-	glPushMatrix();
-	glTranslatef(rcubeP[0], rcubeP[1], rcubeP[2]);
+	if (movableCube) {
+		glPushMatrix();
+		glTranslatef(rcubeP[0], rcubeP[1], rcubeP[2]);
+	}
 
 	// Face 0
 	glBegin(GL_POLYGON);
 	if (faceColor.find(0) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[0]));
+		glColor4fCustom(1, stringToColor(faceColor[0]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX - v_const, pY - v_const, pZ - v_const);
 	glVertex3f(pX + v_const, pY - v_const, pZ - v_const);
@@ -428,10 +479,10 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	// Face 2
 	glBegin(GL_POLYGON);
 	if (faceColor.find(2) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[2]));
+		glColor4fCustom(1, stringToColor(faceColor[2]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX - v_const, pY + v_const, pZ - v_const);
 	glVertex3f(pX + v_const, pY + v_const, pZ - v_const);
@@ -442,10 +493,10 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	// Face 1
 	glBegin(GL_POLYGON);
 	if (faceColor.find(1) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[1]));
+		glColor4fCustom(1, stringToColor(faceColor[1]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX - v_const, pY - v_const, pZ - v_const);
 	glVertex3f(pX - v_const, pY - v_const, pZ + v_const);
@@ -456,10 +507,10 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	// Face 3
 	glBegin(GL_POLYGON);
 	if (faceColor.find(3) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[3]));
+		glColor4fCustom(1, stringToColor(faceColor[3]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX - v_const, pY - v_const, pZ + v_const);
 	glVertex3f(pX + v_const, pY - v_const, pZ + v_const);
@@ -470,10 +521,10 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	// Face 5
 	glBegin(GL_POLYGON);
 	if (faceColor.find(5) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[5]));
+		glColor4fCustom(1, stringToColor(faceColor[5]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX - v_const, pY + v_const, pZ + v_const);
 	glVertex3f(pX + v_const, pY + v_const, pZ + v_const);
@@ -484,17 +535,19 @@ void createCube(int posX, int posY, int posZ, std::map<int, char*> faceColor) {
 	// Face 4
 	glBegin(GL_POLYGON);
 	if (faceColor.find(4) != faceColor.end()) {
-		glColor4fCustom(1,stringToColor(faceColor[4]));
+		glColor4fCustom(1, stringToColor(faceColor[4]));
 	}
 	else {
-		glColor4fCustom(1,stringToColor("blank"));
+		glColor4fCustom(1, stringToColor("blank"));
 	}
 	glVertex3f(pX + v_const, pY - v_const, pZ + v_const);
 	glVertex3f(pX + v_const, pY - v_const, pZ - v_const);
 	glVertex3f(pX + v_const, pY + v_const, pZ - v_const);
 	glVertex3f(pX + v_const, pY + v_const, pZ + v_const);
 	glEnd();
-	glPopMatrix();
+	if (movableCube) {
+		glPopMatrix();
+	}
 	glFlush();
 }
 
@@ -567,98 +620,113 @@ void spawnCube(int cubeNumber, int posX, int posY, int posZ, int face1, char* cl
 	glPopMatrix();
 }
 
-void criartexturas(){
-	glGenTextures(1, &textures[5]);
-	glBindTexture(GL_TEXTURE_2D, textures[5]);
+void criartexturas() {
+	glGenTextures(1, &textures[6]);
+	glBindTexture(GL_TEXTURE_2D, textures[6]);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	imag.LoadBmpFile(path);
+	imag.LoadBmpFile("floor.bmp");
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
 		imag.GetNumCols(),
 		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
 		imag.ImageData());
 
+
+	glGenTextures(1, &textures[7]);
+	glBindTexture(GL_TEXTURE_2D, textures[7]);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	imag.LoadBmpFile("container.bmp");
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+
+
 }
 
-void drawSkybox(int d){
-  d/=2;
-  glEnable(GL_TEXTURE_2D);
-  glColor3f(1.0,1.0,1.0);
-  glPushMatrix();
-  glBindTexture(GL_TEXTURE_2D,textures[4]); //right
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-	glColor3f(1.0,1.0,1.0);
-  glTexCoord2f(0.0f,0.0f);glVertex3f(-d, -d, -d);
-  glTexCoord2f(1.0f,0.0f);glVertex3f(d, -d, -d);
-  glTexCoord2f(1.0f,1.0f);glVertex3f(d, d, -d);
-  glTexCoord2f(0.0f,1.0f);glVertex3f(-d, d, -d);
-  glEnd();
+void drawSkybox(int d) {
+	d /= 2;
+	glEnable(GL_TEXTURE_2D);
+	glColor3f(1.0, 1.0, 1.0);
+	glPushMatrix();
+	glBindTexture(GL_TEXTURE_2D, textures[4]); //right
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 1.0, 1.0);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-d, -d, -d);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(d, -d, -d);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(d, d, -d);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-d, d, -d);
+	glEnd();
 
-  glBindTexture(GL_TEXTURE_2D,textures[3]); //front
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f,0.0f);  glVertex3f(d, -d, -d);
-  glTexCoord2f(1.0f,0.0f);  glVertex3f(d, -d, d);
-  glTexCoord2f(1.0f,1.0f);  glVertex3f(d, d, d);
-  glTexCoord2f(0.0f,1.0f);  glVertex3f(d, d, -d);
-  glEnd();
+	glBindTexture(GL_TEXTURE_2D, textures[3]); //front
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f);  glVertex3f(d, -d, -d);
+	glTexCoord2f(1.0f, 0.0f);  glVertex3f(d, -d, d);
+	glTexCoord2f(1.0f, 1.0f);  glVertex3f(d, d, d);
+	glTexCoord2f(0.0f, 1.0f);  glVertex3f(d, d, -d);
+	glEnd();
 
-  glBindTexture(GL_TEXTURE_2D,textures[1]); //left
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f,0.0f);glVertex3f(d, -d, d);
-  glTexCoord2f(1.0f,0.0f);glVertex3f(-d, -d, d);
-  glTexCoord2f(1.0f,1.0f);glVertex3f(-d, d, d);
-  glTexCoord2f(0.0f,1.0f);glVertex3f(d, d, d);
-  glEnd();
+	glBindTexture(GL_TEXTURE_2D, textures[1]); //left
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(d, -d, d);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(-d, -d, d);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-d, d, d);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(d, d, d);
+	glEnd();
 
-  glBindTexture(GL_TEXTURE_2D,textures[0]); //back
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f,0.0f);  glVertex3f(-d, -d, d);
-  glTexCoord2f(1.0f,0.0f);  glVertex3f(-d, -d, -d);
-  glTexCoord2f(1.0f,1.0f);  glVertex3f(-d, d, -d);
-  glTexCoord2f(0.0f,1.0f);  glVertex3f(-d, d, d);
-  glEnd();
+	glBindTexture(GL_TEXTURE_2D, textures[0]); //back
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f);  glVertex3f(-d, -d, d);
+	glTexCoord2f(1.0f, 0.0f);  glVertex3f(-d, -d, -d);
+	glTexCoord2f(1.0f, 1.0f);  glVertex3f(-d, d, -d);
+	glTexCoord2f(0.0f, 1.0f);  glVertex3f(-d, d, d);
+	glEnd();
 
-  glBindTexture(GL_TEXTURE_2D,textures[2]); //up
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0f,0.0f);glVertex3f(-d, d, d);
-  glTexCoord2f(1.0f,0.0f);glVertex3f(d, d, d);
-  glTexCoord2f(1.0f,1.0f);glVertex3f(d, d, -d);
-  glTexCoord2f(0.0f,1.0f);glVertex3f(-d, d, -d);
+	glBindTexture(GL_TEXTURE_2D, textures[2]); //up
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
 
-  glEnd();
-  glPopMatrix();
-  glDisable(GL_TEXTURE_2D);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-d, d, d);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(d, d, d);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(d, d, -d);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-d, d, -d);
+	glEnd();
 
 	//Down
-	glBindTexture(GL_TEXTURE_2D,textures[5]); //Down
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0,0.0);glVertex3f(d, -d, -d);
-  glTexCoord2f(1.0,0.0);glVertex3f(d, -d, d);
-  glTexCoord2f(1.0,1.0);glVertex3f(-d, -d, d);
-  glTexCoord2f(0.0,1.0);glVertex3f(-d, -d, -d);
-  glEnd();
-  glPopMatrix();
-  glDisable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, textures[5]); //Down
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0); glVertex3f(d, -d, -d);
+	glTexCoord2f(1.0, 0.0); glVertex3f(d, -d, d);
+	glTexCoord2f(1.0, 1.0); glVertex3f(-d, -d, d);
+	glTexCoord2f(0.0, 1.0); glVertex3f(-d, -d, -d);
+	glEnd();
+	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
 }
 
+void drawScene(GLenum order) {
 
+	glPushMatrix();
+	glScalef(rcube_scale, rcube_scale, rcube_scale);
 
-void drawScene() {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Cubo
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ y = 0
 	spawnCube(0, 0, 0, 0, 0, cubeColors[0][0], 1, cubeColors[1][6], 2, cubeColors[2][2]);
@@ -699,47 +767,89 @@ void drawScene() {
 	spawnCube(25, 2, 2, 1, 4, cubeColors[4][7], 5, cubeColors[5][1]);
 	spawnCube(26, 2, 2, 2, 3, cubeColors[3][8], 4, cubeColors[4][8], 5, cubeColors[5][2]);
 
-	//~~~~~~~~~~~~~~Plano X = 0
-	glColor4fCustom(1, stringToColor("purple"));
-	glBegin(GL_POLYGON);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, 0, 4);
-	glVertex3f(0, 2, 4);
-	glVertex3f(0, 2, 0);
-	glEnd();
-	//~~~~~~~~~~~~~~Plano Z = 0
-	if (transparentZ == true) {
-		glColor4fCustom(0.5, stringToColor("purple"));
-		glEnable(GL_BLEND); //Enable blending.
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
-	}
-	else {
-		glColor4fCustom(1, stringToColor("purple"));
-	}
-	glBegin(GL_POLYGON);
-	glVertex3f(0, 0, 0);
-	glVertex3f(4, 0, 0);
-	glVertex3f(4, 2, 0);
-	glVertex3f(0, 2, 0);
-	glEnd();
-	glDisable(GL_BLEND);
-	//~~~~~~~~~~~~~~Plano Y = 0
-	glColor4fCustom(1, stringToColor("purple"));
-	glBegin(GL_POLYGON);
-	glVertex3f(0, 0, 0);
-	glVertex3f(4, 0, 0);
-	glVertex3f(4, 0, 4);
-	glVertex3f(0, 0, 4);
-	glEnd();
-	//~~~~~~~~~~~~~~Plano X = 4
-	glColor4fCustom(1, stringToColor("purple"));
-	glBegin(GL_POLYGON);
-	glVertex3f(4, 0, 0);
-	glVertex3f(4, 0, 4);
-	glVertex3f(4, 2, 4);
-	glVertex3f(4, 2, 0);
-	glEnd();
+	glPopMatrix();
 
+	if (movableCube) {
+
+		//~~~~~~~~~~~~~~Plano X = 0
+		if (transparentX == true) {
+			glColor4fCustom(0.5, stringToColor("purple"));
+			glEnable(GL_BLEND); //Enable blending.
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+		}
+		else {
+			glEnable(GL_TEXTURE_2D);
+			glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[7]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		}
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0);
+		glTexCoord2f(1.0, 0.0); glVertex3f(0, 0, surfaceSize);
+		glTexCoord2f(1.0, 1.0); glVertex3f(0, surfaceHeight, surfaceSize);
+		glTexCoord2f(0.0, 1.0); glVertex3f(0, surfaceHeight, 0);
+		glEnd();
+		glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+		glDisable(GL_BLEND);
+
+		//~~~~~~~~~~~~~~Plano Z = 0
+		if (transparentZ == true) {
+			glColor4fCustom(0.5, stringToColor("purple"));
+			glEnable(GL_BLEND); //Enable blending.
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+		}
+		else {
+			glEnable(GL_TEXTURE_2D);
+			glPushMatrix();
+			glBindTexture(GL_TEXTURE_2D, textures[7]); //back
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0);
+			glTexCoord2f(1.0, 0.0); glVertex3f(surfaceSize, 0, 0);
+			glTexCoord2f(1.0, 1.0); glVertex3f(surfaceSize, surfaceHeight, 0);
+			glTexCoord2f(0.0, 1.0); glVertex3f(0, surfaceHeight, 0);
+			glEnd();
+			glDisable(GL_TEXTURE_2D);
+			glPopMatrix();
+		}
+		glDisable(GL_BLEND);
+
+		//~~~~~~~~~~~~~~Plano Y = 0
+		glEnable(GL_TEXTURE_2D);
+		glPushMatrix();
+		glBindTexture(GL_TEXTURE_2D, textures[6]); //back
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(0, 0, 0);
+		glTexCoord2f(1.0, 0.0); glVertex3f(surfaceSize, 0, 0);
+		glTexCoord2f(1.0, 1.0); glVertex3f(surfaceSize, 0, surfaceSize);
+		glTexCoord2f(0.0, 1.0); glVertex3f(0, 0, surfaceSize);
+		glEnd();
+		glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+
+		//~~~~~~~~~~~~~~Plano X = 4
+		glEnable(GL_TEXTURE_2D);
+		glPushMatrix();
+		glBindTexture(GL_TEXTURE_2D, textures[7]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3f(surfaceSize, 0, 0);
+		glTexCoord2f(1.0, 0.0); glVertex3f(surfaceSize, 0, surfaceSize);
+		glTexCoord2f(1.0, 1.0); glVertex3f(surfaceSize, surfaceHeight, surfaceSize);
+		glTexCoord2f(0.0, 1.0); glVertex3f(surfaceSize, surfaceHeight, 0);
+		glEnd();
+		glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+
+		glEnd();
+	}
 }
 
 void iluminacao() {
@@ -787,14 +897,40 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(obsPini[0], obsPini[1], obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2], 0, 1, 0);
-	iluminacao();
+	//printf("%lf %lf %lf %lf %lf %lf\n", obsPini[0], obsPini[1], obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2]);
+
 	drawSkybox(100);
-	drawScene();
 	iluminacao();
 
+	if (movableCube) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glPushMatrix();
+		glScalef(-1., 1., 1.);
+		glTranslatef(0., 0., 0.);
+		drawScene(GL_CW);
+		glPopMatrix();
+
+	/* Mirror */
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glPushAttrib(0xffffffff);
+		glDisable(GL_LIGHTING);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4f(0., 0., 0., 0.05);
+		glBegin(GL_QUADS);
+		glVertex3f(-rcube_size / 2, surfaceHeight * 5, rcube_size / 2);
+		glVertex3f(-rcube_size / 2, -rcube_size / 2, rcube_size / 2);
+		glVertex3f(-rcube_size / 2, -rcube_size / 2, -rcube_size / 2);
+		glVertex3f(-rcube_size / 2, surfaceHeight * 5, -rcube_size / 2);
+		glEnd();
+		glPopAttrib();
+	}
+
+	/* Scene */
+	drawScene(GL_CCW);
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Objectos ]
-	drawScene();
+	//drawScene(GL_CCW);
 	//drawOrientacao();
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
@@ -806,7 +942,7 @@ GLvoid resize(GLsizei width, GLsizei height)
 {
 	wScreen = width;
 	hScreen = height;
-	drawScene();
+	drawScene(GL_CCW);
 }
 
 
@@ -825,48 +961,88 @@ void updateVisao() {
 	glutPostRedisplay();
 
 }
+
+bool verifyMovement(int type) {
+	//1 = Frente - 2 = Esquerda - 3 = Atrás - 4 = Direita
+	if (type == 1) {
+		if ((rcubeP[2] - movementVariable) < rcube_size) {
+			//rcubeP[2] = rcube_size;
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	else if (type == 2) {
+		if ((rcubeP[0] - movementVariable) < rcube_size) {
+			//rcubeP[0] = rcube_size;
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	else if (type == 3) {
+		if ((rcubeP[2] + movementVariable) > (surfaceSize - rcube_size * 3)) {
+			//rcubeP[2] = (surfaceSize - rcube_size * 3);
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	else if (type == 4) {
+		if ((rcubeP[0] + movementVariable) > (surfaceSize - rcube_size * 3)) {
+			//rcubeP[0] = (surfaceSize - rcube_size * 3);
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+}
+
 //======================================================= EVENTOS
 //======================================================= EVENTOS
 void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 		//--------------------------- Direccao da Lanterna
+	case 'w':
+	case 'W':
+		if (verifyMovement(1) == true) {
+			rcubeP[2] -= movementVariable;
+			glutPostRedisplay();
+		}
+		break;
+	case 'a':
+	case 'A':
+		if (verifyMovement(2) == true) {
+			rcubeP[0] -= movementVariable;
+			glutPostRedisplay();
+		}
+		break;
 	case 's':
 	case 'S':
-		incH = incH - 0.05;
-		if (incH<-incMaxH) incH = -incMaxH;
-		updateVisao();
+		if (verifyMovement(3) == true) {
+			rcubeP[2] += movementVariable;
+			glutPostRedisplay();
+		}
 		break;
 	case 'd':
 	case 'D':
-		incH = incH + 0.05;
-		if (incH>incMaxH) incH = incMaxH;
-		updateVisao();
-		break;
-	case 'e':
-	case 'E':
-		incV = incV + 0.05;
-		if (incV>incMaxV) incV = incMaxV;
-		updateVisao();
-		break;
-	case 'c':
-	case 'C':
-		incV = incV - 0.05;
-		if (incV<-incMaxV) incV = -incMaxV;
-		updateVisao();
-		break;
-		//--------------------------- Dia/noite
-	case 'n':
-	case 'N':
-		noite = !noite;
-		if (noite)
-		{
-			luzGlobalCor[0] = 0.6;   luzGlobalCor[1] = 0.6;   luzGlobalCor[2] = 0.6;
+		if (verifyMovement(4) == true) {
+			rcubeP[0] += movementVariable;
+			glutPostRedisplay();
 		}
-		else
-		{
-			luzGlobalCor[0] = 0.3;   luzGlobalCor[1] = 0.3;   luzGlobalCor[2] = 0.3;
-		}
-		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, luzGlobalCor);
+		break;
+	case 'x':
+	case 'X':
+		rcubeP[1] += 0.1;
+		glutPostRedisplay();
+		break;
+	case 'z':
+	case 'Z':
+		rcubeP[1] -= 0.1;
 		glutPostRedisplay();
 		break;
 		//--------------------------- Iluminacaoda sala
@@ -884,7 +1060,6 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'l':
 	case 'L':
 		linear = !linear;
-
 		if (linear) {
 			glEnable(GL_FOG);
 			glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -893,10 +1068,6 @@ void keyboard(unsigned char key, int x, int y) {
 			glDisable(GL_FOG);
 		glutPostRedisplay();
 		break;
-	case 'x':
-	case 'X':
-		rcubeP[1] += 0.5;
-		glutPostRedisplay();
 		//--------------------------- Escape
 	case 27:
 		exit(0);
