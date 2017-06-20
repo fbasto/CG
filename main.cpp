@@ -4,20 +4,11 @@
 #include <string.h>
 #include <map>
 #include <list>
-<<<<<<< HEAD
 #include "RgbImage.h"
 #include <GL/glut.h>
-=======
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <map>
-#include <list>
-#include "RgbImage.h"
 
 //#include <GL/glut.h>*/
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
+
 
 //--------------------------------- Definir cores
 #define AZUL     0.0, 0.0, 1.0, 1.0
@@ -90,19 +81,14 @@ static bool transparentZ = false; // Transparente se for true
 GLfloat   quadS = 4.0;
 GLfloat   quadP[] = { -2, 0, -8 };
 
-<<<<<<< HEAD
-//------------------------------------------------------------ NOVO - Nevoeiro
-GLfloat fogColor[4] = {0.5, 0.5, 0.5, 1.0};
-GLfloat fogDensity = 0.2;
-bool fog = false;
-=======
+
 //------------------------------------------------------------ Nevoeiro
 GLfloat nevoeiroCor[] = { 0.75, 0.75, 0.75, 1.0 };
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
+
 
 
 /*skybox texturas*/
-GLuint textures[6];
+GLuint textures[7];
 float brightness = 0.8f;
 RgbImage imag;
 
@@ -158,33 +144,28 @@ void initLights(void);
 void criarsky();
 void sideTextures(char path[50], int i);
 
-<<<<<<< HEAD
+
 void criarsky(){
 	int i;
 	//char sides[6][20]= {"craterlake_ft.bmp","craterlake_rt.bmp","craterlake_bk.bmp","craterlake_lf.bmp","craterlake_up.bmp","craterlake_dn.bmp"};
 	char sides[6][20]= {"left.bmp","back.bmp","top.bmp","right.bmp","front.bmp","bot.bmp"};
-=======
-void criarsky() {
-	int i;
-	//char sides[6][20]= {"craterlake_ft.bmp","craterlake_rt.bmp","craterlake_bk.bmp","craterlake_lf.bmp","craterlake_up.bmp","craterlake_dn.bmp"};
-	char sides[6][20] = { "craterlake_lf.bmp","craterlake_bk.bmp","craterlake_up.bmp","craterlake_rt.bmp","craterlake_ft.bmp","craterlake_dn.bmp" };
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
 	char tpath[50];
-
 	for (i = 0; i<6; i++) {
-		//sprintf(tpath, "skybox/%s", sides[i]); usa-se o sprint_s pq esta funçao está deprecated
-		sprintf_s(tpath, "skybox/%s", sides[i]);
+		sprintf(tpath, "skybox/%s", sides[i]); //usa-se o sprint_s pq esta funçao está deprecated
+		//sprintf_s(tpath, "skybox/%s", sides[i]);
 		sideTextures(tpath, i);
 	}
 }
+
+
 void sideTextures(char path[50], int i) {
 	glGenTextures(1, &textures[i]);
 	glBindTexture(GL_TEXTURE_2D, textures[i]);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	imag.LoadBmpFile(path);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
 		imag.GetNumCols(),
@@ -192,42 +173,16 @@ void sideTextures(char path[50], int i) {
 		imag.ImageData());
 }
 
-	for(i=0;i<6;i++){
-		sprintf(tpath, "skybox/%s",sides[i]);
-		sideTextures(tpath, i);
-	}
-}
-void sideTextures(char path[50], int i){
-	glGenTextures(1, &textures[i]);
-	glBindTexture(GL_TEXTURE_2D, textures[i]);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	imag.LoadBmpFile(path);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-			imag.GetNumCols(),
-			imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-			imag.ImageData());
-}
+
 
 //--------------------- NOVO - Definicoes do nevoeiro
 void initNevoeiro(void) {
-<<<<<<< HEAD
-	glFogi (GL_FOG_MODE, GL_EXP2);
-	glFogfv (GL_FOG_COLOR, fogColor);
-	glFogf (GL_FOG_DENSITY, fogDensity);
 
-
-
-=======
 	glFogfv(GL_FOG_COLOR, nevoeiroCor); //Cor do nevoeiro
 	glFogi(GL_FOG_MODE, GL_LINEAR); //Equa�cao do nevoeiro - linear
 	glFogf(GL_FOG_START, 1.0); // Distancia a que tera' inicio o nevoeiro
 	glFogf(GL_FOG_END, 5.0); // Distancia a que o nevoeiro terminara'
 	glFogf(GL_FOG_DENSITY, 0.75); //Densidade do nevoeiro - nao se especifica quando temos "nevoeiro linear"
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
 }
 
 void initLights(void) {
@@ -612,7 +567,22 @@ void spawnCube(int cubeNumber, int posX, int posY, int posZ, int face1, char* cl
 	glPopMatrix();
 }
 
-<<<<<<< HEAD
+void criartexturas(){
+	glGenTextures(1, &textures[5]);
+	glBindTexture(GL_TEXTURE_2D, textures[5]);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	imag.LoadBmpFile(path);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+
+}
+
 void drawSkybox(int d){
   d/=2;
   glEnable(GL_TEXTURE_2D);
@@ -686,89 +656,7 @@ void drawSkybox(int d){
   glDisable(GL_TEXTURE_2D);
 }
 
-void drawScene() {
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chaleira
-=======
-void drawSkybox(int d) {
-	d /= 2;
-	glEnable(GL_TEXTURE_2D);
-	glColor3f(1.0, 1.0, 1.0);
-	glPushMatrix();
-	glBindTexture(GL_TEXTURE_2D, textures[1]); //right
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glColor3f(1.0, 1.0, 1.0);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-d, -d, -d);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(d, -d, -d);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(d, d, -d);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-d, d, -d);
-	glEnd();
-
-	glBindTexture(GL_TEXTURE_2D, textures[3]); //front
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);  glVertex3f(d, -d, -d);
-	glTexCoord2f(1.0f, 0.0f);  glVertex3f(d, -d, d);
-	glTexCoord2f(1.0f, 1.0f);  glVertex3f(d, d, d);
-	glTexCoord2f(0.0f, 1.0f);  glVertex3f(d, d, -d);
-	glEnd();
-
-	glBindTexture(GL_TEXTURE_2D, textures[4]); //left
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(d, -d, d);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(-d, -d, d);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(-d, d, d);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(d, d, d);
-	glEnd();
-
-	glBindTexture(GL_TEXTURE_2D, textures[0]); //back
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);  glVertex3f(-d, -d, d);
-	glTexCoord2f(1.0f, 0.0f);  glVertex3f(-d, -d, -d);
-	glTexCoord2f(1.0f, 1.0f);  glVertex3f(-d, d, -d);
-	glTexCoord2f(0.0f, 1.0f);  glVertex3f(-d, d, d);
-	glEnd();
-
-	glBindTexture(GL_TEXTURE_2D, textures[2]); //up
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0); glVertex3f(d, d, -d);
-	glTexCoord2f(0.9, 0.0); glVertex3f(d, d, d);
-	glTexCoord2f(1.0, 1.0); glVertex3f(-d, d, d);
-	glTexCoord2f(0.0, 1.0); glVertex3f(-d, d, -d);
-
-
-	glTexCoord2f(0.0, 0.0); glVertex3f(d, d, -d);
-	glTexCoord2f(1.0, 0.0); glVertex3f(-d, d, d);
-	glTexCoord2f(1.0, 1.0); glVertex3f(-d, d, d);
-	glTexCoord2f(0.0, 1.0); glVertex3f(-d, d, -d);
-
-	glEnd();
-	glPopMatrix();
-	glDisable(GL_TEXTURE_2D);
-
-	//Down
-	glBindTexture(GL_TEXTURE_2D, textures[5]); //Down
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0); glVertex3f(d, -d, -d);
-	glTexCoord2f(1.0, 0.0); glVertex3f(d, -d, d);
-	glTexCoord2f(1.0, 1.0); glVertex3f(-d, -d, d);
-	glTexCoord2f(0.0, 1.0); glVertex3f(-d, -d, -d);
-	glEnd();
-	glPopMatrix();
-	glDisable(GL_TEXTURE_2D);
-}
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
 
 void drawScene() {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Cubo
@@ -811,10 +699,6 @@ void drawScene() {
 	spawnCube(25, 2, 2, 1, 4, cubeColors[4][7], 5, cubeColors[5][1]);
 	spawnCube(26, 2, 2, 2, 3, cubeColors[3][8], 4, cubeColors[4][8], 5, cubeColors[5][2]);
 
-<<<<<<< HEAD
-
-
-=======
 	//~~~~~~~~~~~~~~Plano X = 0
 	glColor4fCustom(1, stringToColor("purple"));
 	glBegin(GL_POLYGON);
@@ -855,7 +739,7 @@ void drawScene() {
 	glVertex3f(4, 2, 4);
 	glVertex3f(4, 2, 0);
 	glEnd();
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
+
 }
 
 void iluminacao() {
@@ -1000,16 +884,10 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'l':
 	case 'L':
 		linear = !linear;
-<<<<<<< HEAD
-		if (linear){
-			glEnable(GL_FOG);
-=======
+
 		if (linear) {
+			glEnable(GL_FOG);
 			glFogi(GL_FOG_MODE, GL_LINEAR);
-		}
-		else
->>>>>>> 2b1053ccd6429fc1711fa63a47320a9991f4a28d
-			glFogi(GL_FOG_MODE, GL_EXP2);
 		}
 		else
 			glDisable(GL_FOG);
@@ -1018,7 +896,7 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'x':
 	case 'X':
 		rcubeP[1] += 0.5;
-
+		glutPostRedisplay();
 		//--------------------------- Escape
 	case 27:
 		exit(0);
