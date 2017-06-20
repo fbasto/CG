@@ -24,6 +24,7 @@
 #define GRAY1    0.2, 0.2, 0.2, 1.0
 #define GRAY2    0.93, 0.93, 0.93, 1.0
 //================================================================================
+#define TIMER 750
 //===========================================================Variaveis e constantes
 
 // Cores para o cubo rubik
@@ -65,6 +66,8 @@ GLfloat   rcube_size = 0.75;				// dimensao da rcube_size
 GLfloat   rcubeP[] = { 10, 0, 10 };	// posicao da rcube_size
 double rotate_y = 0;
 double rotate_x = 0;
+static float xrot;
+static int rotation_value;
 
 //------------------------------------------------------------ Texturas e Rotacao
 GLfloat   quadS = 4.0;
@@ -166,48 +169,59 @@ static void cbMainMenu(int value)
 	}
 }
 
+static void timer (int value)
+{
+	if (value < 4) {
+		lista_rotacoes.push_front(rotation_value);
+		glutPostRedisplay();
+		value++;
+		glutTimerFunc(TIMER, timer, value);
+	}
+}
+
 static void cbRotationsMenu(int value)
 {
 	if (value == 90) {
-		lista_rotacoes.push_front(0);
-		glutPostRedisplay();
+		rotation_value = 0;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 91) {
-		lista_rotacoes.push_front(1);
-		glutPostRedisplay();
+		rotation_value = 1;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 92) {
-		lista_rotacoes.push_front(2);
-		glutPostRedisplay();
+		rotation_value = 2;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 93) {
-		lista_rotacoes.push_front(3);
-		glutPostRedisplay();
+		rotation_value = 3;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 94) {
-		lista_rotacoes.push_front(4);
-		glutPostRedisplay();
+		rotation_value = 4;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 95) {
-		lista_rotacoes.push_front(5);
-		glutPostRedisplay();
+		rotation_value = 5;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 96) {
-		lista_rotacoes.push_front(6);
-		glutPostRedisplay();
+		rotation_value = 6;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 97) {
-		lista_rotacoes.push_front(7);
-		glutPostRedisplay();
+		rotation_value = 7;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 	if (value == 98) {
-		lista_rotacoes.push_front(8);
-		glutPostRedisplay();
+		rotation_value = 8;
+		glutTimerFunc(TIMER, timer, 0);
 	}
 }
 
 void init(void)
 {
+	xrot = 0.;
 	int rotationsMenu, mainMenu;
 	glClearColor(WHITE);
 	glShadeModel(GL_SMOOTH);
