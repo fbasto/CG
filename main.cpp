@@ -61,7 +61,7 @@ GLfloat  rVisao = 3.0, aVisao = 0.5*PI, incVisao = 0.1;
 GLfloat  obsPini[] = { 0, 0, 0.5*xC };
 GLfloat  obsPfin[] = { obsPini[0] - rVisao*cos(aVisao), obsPini[1], obsPini[2] - rVisao*sin(aVisao) };
 
-GLfloat   rcube_size = 1.5;				// dimensao da rcube_size
+GLfloat   rcube_size = 0.75;				// dimensao da rcube_size
 GLfloat   rcubeP[] = { 10, 0, 10 };	// posicao da rcube_size
 double rotate_y = 0;
 double rotate_x = 0;
@@ -156,8 +156,59 @@ void initLights(void) {
 	glLightfv(GL_LIGHT1, GL_SPECULAR, focoCorEsp);
 }
 
+static void cbMainMenu(int value)
+{
+	if (value == 98) {
+
+	}
+	if (value == 99) {
+		exit(0);
+	}
+}
+
+static void cbRotationsMenu(int value)
+{
+	if (value == 90) {
+		lista_rotacoes.push_front(0);
+		glutPostRedisplay();
+	}
+	if (value == 91) {
+		lista_rotacoes.push_front(1);
+		glutPostRedisplay();
+	}
+	if (value == 92) {
+		lista_rotacoes.push_front(2);
+		glutPostRedisplay();
+	}
+	if (value == 93) {
+		lista_rotacoes.push_front(3);
+		glutPostRedisplay();
+	}
+	if (value == 94) {
+		lista_rotacoes.push_front(4);
+		glutPostRedisplay();
+	}
+	if (value == 95) {
+		lista_rotacoes.push_front(5);
+		glutPostRedisplay();
+	}
+	if (value == 96) {
+		lista_rotacoes.push_front(6);
+		glutPostRedisplay();
+	}
+	if (value == 97) {
+		lista_rotacoes.push_front(7);
+		glutPostRedisplay();
+	}
+	if (value == 98) {
+		lista_rotacoes.push_front(8);
+		glutPostRedisplay();
+	}
+}
+
 void init(void)
 {
+	int rotationsMenu, mainMenu;
 	glClearColor(WHITE);
 	glShadeModel(GL_SMOOTH);
 
@@ -174,6 +225,22 @@ void init(void)
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
+
+	rotationsMenu = glutCreateMenu(cbRotationsMenu);
+	glutAddMenuEntry("Front", 90);
+	glutAddMenuEntry("Back", 91);
+	glutAddMenuEntry("Up", 92);
+	glutAddMenuEntry("Down", 93);
+	glutAddMenuEntry("Right", 94);
+	glutAddMenuEntry("Left", 95);
+	glutAddMenuEntry("Middle", 96);
+	glutAddMenuEntry("Equator", 97);
+	glutAddMenuEntry("Standing", 98);
+	mainMenu = glutCreateMenu(cbMainMenu);
+	glutAddSubMenu("Rotate Cube", rotationsMenu);
+	glutAddMenuEntry("Quit", 99);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+
 }
 
 void glColor4fCustom(double clr[]) {
@@ -186,7 +253,6 @@ void glColor4fCustom(double clr[]) {
 }
 
 double* stringToColor(char clr[]) {
-	printf("%s\n", clr);
 	if (strcmp("white", clr) == 0) {
 		return white;
 	}
@@ -381,8 +447,6 @@ void spawnCube(int cubeNumber, int posX, int posY, int posZ, int face1, char* cl
 
 void drawScene() {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chaleira
-	//*********************** IMPLEMENTAR
-	//*********************** IMPLEMENTAR
 	glPushMatrix();
 	glColor4f(LARANJA);
 	glTranslatef(buleP[0], buleP[1], buleP[2]);
@@ -444,7 +508,6 @@ void drawScene() {
 	glVertex3i(0, 0, 10);
 	glEnd();
 
-
 }
 
 void iluminacao() {
@@ -477,14 +540,11 @@ void display(void) {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Janela Visualizacao ]
 	glViewport(0, 0, wScreen, hScreen);
 
-
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Projeccao]
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-xC, xC, -yC, yC, -zC, zC);
-	//*********************** IMPLEMENTAR
-	//  Pode tambem ser perspectiva
-	//*********************** IMPLEMENTAR
+
 	glEnable(GL_LIGHTING);
 	glViewport(wScreen / 4, hScreen / 4, 0.75*wScreen, 0.75*hScreen);
 	glMatrixMode(GL_PROJECTION);
@@ -492,19 +552,16 @@ void display(void) {
 	gluPerspective(99.0, wScreen / hScreen, 0.1, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(obsPini[0], obsPini[1], obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2], 0, 1, 0);
-
+	gluLookAt(obsPini[0], obsPini[1] + rcube_size, obsPini[2], obsPfin[0], obsPfin[1], obsPfin[2], 0, 1, 0);
 	iluminacao();
 	drawScene();
-	//*********************** IMPLEMENTAR
-	//  Modificar posicao do observador
-	//*********************** IMPLEMENTAR
 	iluminacao();
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Objectos ]
 	drawScene();
 	//drawOrientacao();
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
 	glutSwapBuffers();
 }
@@ -605,7 +662,9 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 
 	}
-}void teclasNotAscii(int key, int x, int y)
+}
+
+void teclasNotAscii(int key, int x, int y)
 {
 	if (key == GLUT_KEY_UP) {
 		obsPini[0] = obsPini[0] + incVisao*cos(aVisao);
@@ -622,7 +681,12 @@ void keyboard(unsigned char key, int x, int y) {
 	if (key == GLUT_KEY_RIGHT) {
 		aVisao = (aVisao - 0.1);
 		aFoco = aFoco + 0.1;
-
+	}
+	if (key == GLUT_KEY_F1) {
+		obsPini[1] += 0.1;
+	}
+	if (key == GLUT_KEY_F2) {
+		obsPini[1] -= 0.1;
 	}
 	updateVisao();
 }
@@ -634,7 +698,7 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(wScreen, hScreen);
 	glutInitWindowPosition(400, 100);
-	glutCreateWindow(":::: CG 2016/17 :::::::::   (left,right,up,down, 'a', 'q') ");
+	glutCreateWindow(" :: CG 2017 - Cubo de Rubik :: ");
 
 	init();
 
